@@ -103,6 +103,9 @@ jspm_packages/
 *.swo
 *~
 
+# Kiro IDE files
+.kiro/
+
 # Temporary files
 *.tmp
 *.temp
