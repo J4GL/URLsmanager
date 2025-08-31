@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="URL Manager - Efficiently manage, edit, filter, and process large collections of URLs">
+    <meta name="author" content="URL Manager">
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self'; 
+                   script-src 'self' 'unsafe-inline'; 
+                   style-src 'self' 'unsafe-inline';
+                   worker-src 'self';">
+    <title>URL Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <header class="header">
+        <h1>URL Manager</h1>
+    </header>
+
+    <section class="statistics-bar" aria-label="Processing Statistics" role="region">
+        <div class="stats-container">
+            <span class="stat-item">
+                <span class="stat-label">Input:</span>
+                <span id="input-count" class="stat-value" aria-label="Input URL count">0</span>
+                <span class="stat-unit">URLs</span>
+            </span>
+            <span class="stat-separator" aria-hidden="true">|</span>
+            <span class="stat-item">
+                <span class="stat-label">Output:</span>
+                <span id="output-count" class="stat-value" aria-label="Output URL count">0</span>
+                <span class="stat-unit">URLs</span>
+            </span>
+            <span class="stat-separator" aria-hidden="true">|</span>
+            <span class="stat-item">
+                <span class="stat-label">Removed:</span>
+                <span id="removed-count" class="stat-value" aria-label="Removed URL count">0</span>
+            </span>
+        </div>
+    </section>
+
+    <main class="main-container" id="main-content">
+        <section class="input-section" aria-label="URL Input" role="region">
+            <div class="text-area-container">
+                <label for="input-textarea" class="visually-hidden">Input URLs (one per line)</label>
+                <textarea 
+                    id="input-textarea" 
+                    class="text-area input-textarea" 
+                    placeholder="Enter URLs here (one per line)..."
+                    aria-describedby="input-help"
+                    aria-label="Input URLs, one per line"
+                    spellcheck="false"
+                    autocomplete="off"
+                ></textarea>
+                <div id="input-help" class="help-text">Enter your URLs here, one per line</div>
+            </div>
+            <div class="button-group" role="group" aria-label="Input actions">
+                <button type="button" id="clear-input-btn" class="secondary-btn" aria-describedby="clear-input-help">
+                    Clear
+                </button>
+                <div id="clear-input-help" class="visually-hidden">Clear all text from input area</div>
+                <button type="button" id="paste-btn" class="secondary-btn" aria-describedby="paste-help">
+                    Paste
+                </button>
+                <div id="paste-help" class="visually-hidden">Paste text from clipboard to input area</div>
+            </div>
+        </section>
+
+        <section class="control-panel" aria-label="Processing Controls" role="region">
+            <div class="control-group">
+                <label for="operation-select">Operation:</label>
+                <select id="operation-select" class="operation-dropdown" aria-describedby="operation-help" aria-required="true">
+                    <option value="">Select operation...</option>
+                    <option value="removeParams">Remove Parameters</option>
+                    <option value="deduplicateTLD">Deduplicate by Top Level Domain</option>
+                    <option value="deduplicateDomain">Deduplicate by Domain and Subdomain</option>
+                    <option value="deduplicateFull">Deduplicate by Full URL</option>
+                    <option value="filterRemove">Filter - Remove URLs containing string</option>
+                    <option value="filterKeep">Filter - Keep only URLs containing string</option>
+                    <option value="keepTLD">Keep only TLD without subdomain</option>
+                </select>
+                <div id="operation-help" class="visually-hidden">Choose how to process your URLs</div>
+            </div>
+
+            <div class="control-group filter-input-group" style="display: none;" aria-live="polite">
+                <label for="filter-input">Filter string:</label>
+                <input type="text" id="filter-input" class="filter-input" placeholder="Enter filter text..." 
+                       aria-describedby="filter-help" aria-required="false">
+                <div id="filter-help" class="visually-hidden">Enter text to filter URLs by</div>
+            </div>
+
+            <div class="control-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="process-all-checkbox" aria-describedby="process-all-help">
+                    <span class="checkbox-text">Process All Text</span>
+                </label>
+                <div id="process-all-help" class="help-text">Check to process more than 1000 lines</div>
+            </div>
+
+            <button type="button" id="process-btn" class="primary-btn" disabled 
+                    aria-describedby="process-help" aria-keyshortcuts="Ctrl+Enter">
+                <span class="btn-text">Process URLs</span>
+                <span class="loading-spinner" style="display: none;" aria-hidden="true"></span>
+            </button>
+            <div id="process-help" class="visually-hidden">Process URLs with selected operation. Keyboard shortcut: Ctrl+Enter</div>
+
+            <div id="error-message" class="error-message" style="display: none;" role="alert" aria-live="assertive"></div>
+        </section>
+
+        <section class="output-section" aria-label="Processing Results" role="region">
+            <div class="text-area-container">
+                <label for="output-textarea" class="visually-hidden">Processed URLs Results</label>
+                <textarea 
+                    id="output-textarea" 
+                    class="text-area output-textarea" 
+                    readonly
+                    placeholder="Processed results will appear here..."
+                    aria-describedby="output-help"
+                    aria-label="Processed URLs results, read-only"
+                    spellcheck="false"
+                    tabindex="0"
+                ></textarea>
+                <div id="output-help" class="help-text">Processed URLs will appear here</div>
+            </div>
+            <div class="button-group" role="group" aria-label="Output actions">
+                <button type="button" id="copy-results-btn" class="secondary-btn" disabled 
+                        aria-describedby="copy-help" aria-keyshortcuts="Ctrl+C">
+                    Copy Results
+                </button>
+                <div id="copy-help" class="visually-hidden">Copy processed results to clipboard. Keyboard shortcut: Ctrl+C when output is focused</div>
+                <button type="button" id="clear-output-btn" class="secondary-btn" aria-describedby="clear-output-help">
+                    Clear
+                </button>
+                <div id="clear-output-help" class="visually-hidden">Clear all text from output area</div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="progress-container" style="display: none;" role="status" aria-live="polite">
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-describedby="progress-text">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <span id="progress-text" class="progress-text">Processing...</span>
+        </div>
+    </footer>
+
+    <!-- Performance optimization scripts -->
+    <script src="js/performance-optimizer.js"></script>
+    <script src="js/memory-manager.js"></script>
+    <script src="js/dom-optimizer.js"></script>
+    
+    <!-- Core application scripts -->
+    <script src="js/error-handler.js"></script>
+    <script src="js/input-validator.js"></script>
+    <script src="js/accessibility-manager.js"></script>
+    <script src="js/url-parser.js"></script>
+    <script src="js/url-processor.js"></script>
+    <script src="js/statistics-manager.js"></script>
+    <script src="js/text-area-manager.js"></script>
+    <script src="js/clipboard-utility-manager.js"></script>
+    <script src="js/control-panel.js"></script>
+    <script src="js/worker-manager.js"></script>
+    <script src="js/url-manager.js"></script>
+    <script>
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlManager = new URLManager();
+            
+            // Make URL manager globally available for accessibility integration
+            window.urlManagerInstance = urlManager;
+            
+            // Detect input method for focus styling
+            let isKeyboardUser = false;
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    isKeyboardUser = true;
+                    document.body.classList.add('keyboard-user');
+                    document.body.classList.remove('mouse-user');
+                }
+            });
+            
+            document.addEventListener('mousedown', function() {
+                isKeyboardUser = false;
+                document.body.classList.add('mouse-user');
+                document.body.classList.remove('keyboard-user');
+            });
+            
+            // Initialize the application
+            urlManager.init().then(() => {
+                console.log('URL Manager application ready');
+                
+                // Run integration verification in development mode
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    runIntegrationVerification();
+                }
+            }).catch(error => {
+                console.error('Failed to initialize URL Manager:', error);
+            });
+        });
+        
+        /**
+         * Integration verification function
+         * Runs basic checks to ensure all components are properly integrated
+         */
+        async function runIntegrationVerification() {
+            console.log('Running integration verification...');
+            
+            const urlManager = window.urlManagerInstance;
+            if (!urlManager) {
+                console.error('❌ URL Manager not available');
+                return;
+            }
+            
+            // Check component initialization
+            const components = [
+                { name: 'StatisticsManager', instance: urlManager.statisticsManager },
+                { name: 'TextAreaManager', instance: urlManager.textAreaManager },
+                { name: 'ControlPanel', instance: urlManager.controlPanel },
+                { name: 'URLProcessor', instance: urlManager.urlProcessor },
+                { name: 'AccessibilityManager', instance: urlManager.accessibilityManager }
+            ];
+            
+            let allComponentsReady = true;
+            for (const component of components) {
+                if (component.instance) {
+                    console.log(`✓ ${component.name} initialized`);
+                } else {
+                    console.error(`❌ ${component.name} not initialized`);
+                    allComponentsReady = false;
+                }
+            }
+            
+            if (!allComponentsReady) {
+                console.error('❌ Integration verification failed: Missing components');
+                return;
+            }
+            
+            // Test basic workflow
+            try {
+                console.log('Testing basic workflow...');
+                
+                // Set test input
+                const testUrls = [
+                    'https://example.com/path?param=value',
+                    'https://test.org/page',
+                    'https://sample.net'
+                ];
+                
+                urlManager.textAreaManager.setInputText(testUrls.join('\n'));
+                
+                // Process with remove parameters
+                await urlManager.processURLs({
+                    operation: 'removeParams',
+                    processAll: true
+                });
+                
+                // Check output
+                const output = urlManager.textAreaManager.getOutputText();
+                if (output && output.length > 0) {
+                    console.log('✓ Basic workflow test passed');
+                } else {
+                    console.error('❌ Basic workflow test failed: No output');
+                }
+                
+                // Clear for normal use
+                urlManager.textAreaManager.clearInput();
+                urlManager.textAreaManager.clearOutput();
+                
+                console.log('✅ Integration verification completed successfully');
+                
+            } catch (error) {
+                console.error('❌ Integration verification failed:', error);
+            }
+        }
+    </script>
+</body>
+</html>
