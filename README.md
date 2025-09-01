@@ -6,11 +6,14 @@ A powerful, client-side web application for efficiently managing, processing, an
 
 ### Core Operations
 - **Remove Parameters** - Strip query parameters from URLs
-- **Deduplicate by TLD** - Remove duplicate URLs based on top-level domain
+- **Trim Last Path Segment** - Remove the last path component from URLs
+- **Extract Domain Only** - Get just the domain without subdomains
+- **Keep URLs Without Subdomains** - Filter out URLs with subdomains
+- **Deduplicate by TLD** - Remove duplicate URLs based on top-level domain (.com, .org, etc.)
 - **Deduplicate by Domain** - Remove duplicates including subdomains
 - **Deduplicate by Full URL** - Remove exact URL duplicates
 - **Filter URLs** - Keep or remove URLs containing specific text
-- **Keep TLD Only** - Extract only the top-level domain without subdomains
+- **Sort URLs** - Sort by domain, length, or filename
 
 ### Performance & Usability
 - **Web Workers** - Background processing for large datasets without UI blocking
@@ -111,7 +114,7 @@ Output: https://example.com/api/users
 │   ├── url-manager.js              # Main application controller
 │   ├── url-processor.js            # Core URL processing logic
 │   ├── worker-manager.js           # Web Worker management
-│   ├── url-worker.js               # Web Worker implementation
+│   ├── url-worker-standalone.js   # Standalone Web Worker implementation
 │   ├── statistics-manager.js      # Statistics tracking
 │   ├── text-area-manager.js       # Text area management
 │   ├── control-panel.js           # UI controls
@@ -122,6 +125,13 @@ Output: https://example.com/api/users
 │   ├── performance-optimizer.js   # Performance optimizations
 │   ├── memory-manager.js          # Memory management
 │   └── dom-optimizer.js           # DOM optimization
+├── tests/                          # Playwright test suite
+│   ├── functionality.spec.ts      # Core functionality tests
+│   ├── copy-button-fix-test.spec.ts # Copy button tests
+│   └── copy-button-all-operations.spec.ts # Comprehensive operation tests
+├── package.json                    # Node.js dependencies and scripts
+├── playwright.config.ts           # Playwright test configuration
+├── CLAUDE.md                       # Development guidance for AI assistants
 ├── README.md                       # This file
 ├── UNLICENSE                       # Public domain license
 └── .gitignore                      # Git ignore rules
@@ -152,9 +162,23 @@ npx serve .
 ```
 
 ### Testing
-- Open browser developer tools for console logs
-- Integration tests run automatically in development mode
-- Manual testing with various URL formats and sizes
+```bash
+# Run all tests
+npm test
+
+# Run specific test
+npx playwright test tests/functionality.spec.ts --headed
+
+# Run tests with visible browser
+npx playwright test --headed
+```
+
+**Test Coverage:**
+- Unit tests for URL processing operations
+- Integration tests for UI components
+- Comprehensive copy button functionality tests
+- Browser compatibility tests
+- Accessibility compliance tests
 
 ### Contributing
 This project is in the public domain. Feel free to:
@@ -196,7 +220,45 @@ This project is in the public domain. Feel free to:
 
 This project is released into the public domain under The Unlicense. See [UNLICENSE](UNLICENSE) for details.
 
+## Recent Updates
+
+### Latest Improvements
+- **✅ Fixed Copy Button Issue** - Copy Results button now works reliably with all 13 processing operations
+- **🧪 Comprehensive Testing** - Added full test suite covering all URL operations and edge cases
+- **📋 Enhanced Clipboard Integration** - Improved copy/paste functionality with visual feedback
+- **♿ Accessibility Enhancements** - Better ARIA support and keyboard navigation
+- **📚 Developer Documentation** - Added CLAUDE.md for AI-assisted development
+
+### All Supported Operations (Fully Tested ✅)
+1. **Clean & Modify Operations:**
+   - Remove Parameters ✅
+   - Trim Last Path Segment ✅  
+   - Extract Domain Only ✅
+   - Keep URLs Without Subdomains ✅
+
+2. **Deduplication Operations:**
+   - Deduplicate by TLD ✅
+   - Deduplicate by Domain ✅  
+   - Deduplicate by Full URL ✅
+
+3. **Filter Operations:**
+   - Keep URLs Containing Text ✅
+   - Remove URLs Containing Text ✅
+
+4. **Sort Operations:**
+   - Sort by Domain ✅
+   - Sort by Length ✅
+   - Sort by Filename ✅
+
 ## Changelog
+
+### v1.1.0 (Latest)
+- **FIXED**: Copy Results button now enables after all processing operations
+- **ADDED**: Comprehensive Playwright test suite with 13+ operation tests
+- **IMPROVED**: Enhanced error handling and user feedback
+- **ADDED**: Development documentation (CLAUDE.md)
+- **ENHANCED**: Better clipboard integration with visual feedback
+- **OPTIMIZED**: More reliable DOM updates and component integration
 
 ### v1.0.0
 - Initial release with core URL processing operations
