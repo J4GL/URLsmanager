@@ -1,0 +1,26 @@
+{
+  "name": "urlsmanager",
+  "version": "1.0.0",
+  "description": "A powerful, client-side web application for efficiently managing, processing, and manipulating large collections of URLs. Built with vanilla JavaScript and optimized for performance and accessibility.",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test --inline",
+    "test:playwright": "playwright test --inline",
+    "test:pw": "playwright test --inline"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/J4GL/URLsmanager.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/J4GL/URLsmanager/issues"
+  },
+  "homepage": "https://github.com/J4GL/URLsmanager#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "playwright": "^1.55.0"
+  }
+}

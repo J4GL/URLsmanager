@@ -69,18 +69,47 @@
 
         <section class="control-panel" aria-label="Processing Controls" role="region">
             <div class="control-group">
-                <label for="operation-select">Operation:</label>
-                <select id="operation-select" class="operation-dropdown" aria-describedby="operation-help" aria-required="true">
-                    <option value="">Select operation...</option>
+                <label>🧹 Clean & Modify URLs:</label>
+                <select id="clean-modify-select" class="operation-dropdown" aria-describedby="clean-modify-help">
+                    <option value="">Select clean/modify operation...</option>
                     <option value="removeParams">Remove Parameters</option>
-                    <option value="deduplicateTLD">Deduplicate by Top Level Domain</option>
-                    <option value="deduplicateDomain">Deduplicate by Domain and Subdomain</option>
-                    <option value="deduplicateFull">Deduplicate by Full URL</option>
-                    <option value="filterRemove">Filter - Remove URLs containing string</option>
-                    <option value="filterKeep">Filter - Keep only URLs containing string</option>
-                    <option value="keepTLD">Keep only TLD without subdomain</option>
+                    <option value="trimLastPath">Trim Last Path Segment</option>
+                    <option value="extractTLD">Extract Domain Only</option>
+                    <option value="keepTLD">Keep URLs Without Subdomains</option>
                 </select>
-                <div id="operation-help" class="visually-hidden">Choose how to process your URLs</div>
+                <div id="clean-modify-help" class="visually-hidden">Choose how to clean or modify your URLs</div>
+            </div>
+
+            <div class="control-group">
+                <label>🔍 Remove Duplicates:</label>
+                <select id="deduplicate-select" class="operation-dropdown" aria-describedby="deduplicate-help">
+                    <option value="">Select deduplication method...</option>
+                    <option value="deduplicateTLD">By Top Level Domain (.com, .org, etc.)</option>
+                    <option value="deduplicateDomain">By Domain & Subdomain</option>
+                    <option value="deduplicateFull">By Exact URL Match</option>
+                </select>
+                <div id="deduplicate-help" class="visually-hidden">Choose how to remove duplicate URLs</div>
+            </div>
+
+            <div class="control-group">
+                <label>📝 Filter URLs:</label>
+                <select id="filter-select" class="operation-dropdown" aria-describedby="filter-help">
+                    <option value="">Select filter operation...</option>
+                    <option value="filterKeep">Keep Only URLs Containing Text</option>
+                    <option value="filterRemove">Remove URLs Containing Text</option>
+                </select>
+                <div id="filter-help" class="visually-hidden">Choose how to filter your URLs</div>
+            </div>
+
+            <div class="control-group">
+                <label>📊 Sort URLs:</label>
+                <select id="sort-select" class="operation-dropdown" aria-describedby="sort-help">
+                    <option value="">Select sorting method...</option>
+                    <option value="sortByDomain">By Domain</option>
+                    <option value="sortByLength">By Length</option>
+                    <option value="sortByFilename">By Filename (without extension)</option>
+                </select>
+                <div id="sort-help" class="visually-hidden">Choose how to sort your URLs</div>
             </div>
 
             <div class="control-group filter-input-group" style="display: none;" aria-live="polite">

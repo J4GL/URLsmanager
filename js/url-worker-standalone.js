@@ -259,6 +259,21 @@ class URLProcessor {
                 case 'keepTLDOnly':
                     results = this.keepTLDOnly(urls);
                     break;
+                case 'trimLastPath':
+                    results = this.trimLastPath(urls);
+                    break;
+                case 'extractTLD':
+                    results = this.extractTLD(urls);
+                    break;
+                case 'sortByDomain':
+                    results = this.sortByDomain(urls);
+                    break;
+                case 'sortByLength':
+                    results = this.sortByLength(urls);
+                    break;
+                case 'sortByFilename':
+                    results = this.sortByFilename(urls);
+                    break;
                 default:
                     throw new Error(`Unknown operation: ${operation}`);
             }
@@ -401,6 +416,175 @@ class URLProcessor {
         }
 
         return results;
+    }
+
+    trimLastPath(urls) {
+        const results = [];
+
+        for (const url of urls) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const trimmedUrl = url.trim();
+            
+            if (!URLParser.isValid(trimmedUrl)) {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            try {
+                const urlObj = new URL(trimmedUrl);
+                let path = urlObj.pathname;
+                
+                if (path.endsWith('/')) {
+                    path = path.slice(0, -1);
+                }
+                
+                const lastSlashIndex = path.lastIndexOf('/');
+                if (lastSlashIndex > 0) {
+                    path = path.substring(0, lastSlashIndex);
+                } else if (lastSlashIndex === 0) {
+                    path = '/';
+                }
+                
+                urlObj.pathname = path;
+                results.push(urlObj.toString());
+            } catch (error) {
+                this.stats.invalidCount++;
+            }
+        }
+
+        return results;
+    }
+
+    extractTLD(urls) {
+        const results = [];
+        const seen = new Set();
+
+        for (const url of urls) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const trimmedUrl = url.trim();
+            const parsed = URLParser.parse(trimmedUrl);
+            
+            if (!parsed.valid) {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const domain = parsed.domain;
+            const tld = parsed.tld;
+            
+            if (domain && tld) {
+                const baseDomain = `${domain}.${tld}`;
+                if (!seen.has(baseDomain)) {
+                    seen.add(baseDomain);
+                    results.push(baseDomain);
+                }
+            } else {
+                this.stats.invalidCount++;
+            }
+        }
+
+        return results;
+    }
+
+    sortByDomain(urls) {
+        const validUrls = [];
+
+        for (const url of urls) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const trimmedUrl = url.trim();
+            const parsed = URLParser.parse(trimmedUrl);
+            
+            if (!parsed.valid) {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            validUrls.push({
+                original: trimmedUrl,
+                domain: parsed.hostname.toLowerCase()
+            });
+        }
+
+        validUrls.sort((a, b) => a.domain.localeCompare(b.domain));
+        return validUrls.map(item => item.original);
+    }
+
+    sortByLength(urls) {
+        const validUrls = [];
+
+        for (const url of urls) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const trimmedUrl = url.trim();
+            
+            if (URLParser.isValid(trimmedUrl)) {
+                validUrls.push(trimmedUrl);
+            } else {
+                this.stats.invalidCount++;
+            }
+        }
+
+        validUrls.sort((a, b) => a.length - b.length);
+        return validUrls;
+    }
+
+    sortByFilename(urls) {
+        const validUrls = [];
+
+        for (const url of urls) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const trimmedUrl = url.trim();
+            const parsed = URLParser.parse(trimmedUrl);
+            
+            if (!parsed.valid) {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const path = parsed.path || '/';
+            const pathSegments = path.split('/');
+            let filename = pathSegments[pathSegments.length - 1] || '';
+            
+            const lastDotIndex = filename.lastIndexOf('.');
+            if (lastDotIndex > 0) {
+                filename = filename.substring(0, lastDotIndex);
+            }
+            
+            if (!filename) {
+                if (pathSegments.length > 1) {
+                    filename = pathSegments[pathSegments.length - 2] || parsed.hostname;
+                } else {
+                    filename = parsed.hostname;
+                }
+            }
+
+            validUrls.push({
+                original: trimmedUrl,
+                filename: filename.toLowerCase()
+            });
+        }
+
+        validUrls.sort((a, b) => a.filename.localeCompare(b.filename));
+        return validUrls.map(item => item.original);
     }
 
     createProcessingResult(success, results, errors) {

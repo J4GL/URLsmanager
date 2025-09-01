@@ -607,7 +607,12 @@ class ErrorHandler {
             'deduplicateFull',
             'filterRemove',
             'filterKeep',
-            'keepTLD'
+            'keepTLD',
+            'trimLastPath',
+            'extractTLD',
+            'sortByDomain',
+            'sortByLength',
+            'sortByFilename'
         ];
 
         if (!input || typeof input !== 'string') {

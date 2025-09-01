@@ -94,7 +94,8 @@ class ClipboardUtilityManager {
     async handleCopyResults() {
         const copyBtn = document.getElementById('copy-results-btn');
         
-        if (!this.textAreaManager.hasOutputContent()) {
+        const outputText = this.textAreaManager.getOutputText();
+        if (!outputText || outputText.trim() === '') {
             this.showFeedback('No results to copy', 'error');
             return;
         }
@@ -169,7 +170,9 @@ class ClipboardUtilityManager {
     handleClearInput() {
         const clearBtn = document.getElementById('clear-input-btn');
         
-        if (!this.textAreaManager.hasInputContent()) {
+        // Check if input has content by getting the raw text
+        const currentText = this.textAreaManager.getInputText(true);
+        if (!currentText || currentText.trim() === '') {
             this.showFeedback('Input is already empty', 'info');
             return;
         }
@@ -177,8 +180,8 @@ class ClipboardUtilityManager {
         // Show processing state briefly
         this.setButtonState(clearBtn, 'processing', 'Clearing...');
         
-        setTimeout(() => {
-            this.textAreaManager.clearInput();
+        setTimeout(async () => {
+            await this.textAreaManager.clearInput();
             this.setButtonState(clearBtn, 'success', 'Cleared!');
             this.showFeedback('Input cleared', 'success');
             
@@ -203,8 +206,8 @@ class ClipboardUtilityManager {
         // Show processing state briefly
         this.setButtonState(clearBtn, 'processing', 'Clearing...');
         
-        setTimeout(() => {
-            this.textAreaManager.clearOutput();
+        setTimeout(async () => {
+            await this.textAreaManager.clearOutput();
             this.setButtonState(clearBtn, 'success', 'Cleared!');
             this.showFeedback('Output cleared', 'success');
             
@@ -256,7 +259,8 @@ class ClipboardUtilityManager {
         
         // Re-check if copy button should be disabled based on content
         if (button.id === 'copy-results-btn') {
-            button.disabled = !this.textAreaManager.hasOutputContent();
+            const outputText = this.textAreaManager.getOutputText();
+            button.disabled = !outputText || outputText.trim() === '';
         }
     }
 
@@ -305,9 +309,18 @@ class ClipboardUtilityManager {
      * Update copy button state based on output content
      */
     updateCopyButtonState() {
-        const copyBtn = document.getElementById('copy-results-btn');
-        if (copyBtn) {
-            copyBtn.disabled = !this.textAreaManager.hasOutputContent();
+        try {
+            const copyBtn = document.getElementById('copy-results-btn');
+            if (copyBtn && this.textAreaManager) {
+                const outputText = this.textAreaManager.getOutputText();
+                const hasContent = outputText && outputText.trim() !== '';
+                copyBtn.disabled = !hasContent;
+                
+                // Also update the button's aria-disabled attribute for accessibility
+                copyBtn.setAttribute('aria-disabled', hasContent ? 'false' : 'true');
+            }
+        } catch (error) {
+            console.error('Error updating copy button state:', error);
         }
     }
 

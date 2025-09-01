@@ -113,6 +113,16 @@ class URLProcessor {
                 return this.filter(urls, options.type, options.filterString);
             case 'keepTLDOnly':
                 return this.keepTLDOnly(urls);
+            case 'trimLastPath':
+                return this.trimLastPath(urls);
+            case 'extractTLD':
+                return this.extractTLD(urls);
+            case 'sortByDomain':
+                return this.sortByDomain(urls);
+            case 'sortByLength':
+                return this.sortByLength(urls);
+            case 'sortByFilename':
+                return this.sortByFilename(urls);
             default:
                 throw new Error(`Unknown operation: ${operation}`);
         }
@@ -301,6 +311,98 @@ class URLProcessor {
     }
 
     /**
+     * Trim the last path segment from URLs
+     * Example: https://example.com/path/to/page -> https://example.com/path/to
+     * @param {string[]} urls - Array of URL strings
+     * @returns {string[]} Array of URLs with last path trimmed
+     */
+    trimLastPath(urls) {
+        const results = [];
+
+        for (const url of urls) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const trimmedUrl = url.trim();
+            
+            // Validate URL first
+            if (!URLParser.isValid(trimmedUrl)) {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            try {
+                const urlObj = new URL(trimmedUrl);
+                let path = urlObj.pathname;
+                
+                // Remove trailing slash if present, then trim last segment
+                if (path.endsWith('/')) {
+                    path = path.slice(0, -1);
+                }
+                
+                // Find last slash and trim everything after it
+                const lastSlashIndex = path.lastIndexOf('/');
+                if (lastSlashIndex > 0) {
+                    path = path.substring(0, lastSlashIndex);
+                } else if (lastSlashIndex === 0) {
+                    path = '/'; // Keep root slash
+                }
+                
+                urlObj.pathname = path;
+                results.push(urlObj.toString());
+            } catch (error) {
+                this.stats.invalidCount++;
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Extract only the top-level domain (TLD) from URLs
+     * Example: https://www.example.com/path -> example.com
+     * @param {string[]} urls - Array of URL strings
+     * @returns {string[]} Array of TLD-only domains
+     */
+    extractTLD(urls) {
+        const results = [];
+        const seen = new Set(); // To avoid duplicate TLDs
+
+        for (const url of urls) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const trimmedUrl = url.trim();
+            const parsed = URLParser.parse(trimmedUrl);
+            
+            if (!parsed.valid) {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            // Extract the base domain (without subdomain)
+            const domain = parsed.domain;
+            const tld = parsed.tld;
+            
+            if (domain && tld) {
+                const baseDomain = `${domain}.${tld}`;
+                if (!seen.has(baseDomain)) {
+                    seen.add(baseDomain);
+                    results.push(baseDomain);
+                }
+            } else {
+                this.stats.invalidCount++;
+            }
+        }
+
+        return results;
+    }
+
+    /**
      * Create a standardized processing result object
      * @param {boolean} success - Whether the operation was successful
      * @param {string[]} results - Array of processed URLs
@@ -340,6 +442,126 @@ class URLProcessor {
      */
     getStats() {
         return { ...this.stats };
+    }
+
+    /**
+     * Sort URLs by domain alphabetically
+     * @param {string[]} urls - Array of URL strings
+     * @returns {string[]} Array of URLs sorted by domain
+     */
+    sortByDomain(urls) {
+        const validUrls = [];
+
+        // Filter and collect valid URLs with their domains
+        for (const url of urls) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const trimmedUrl = url.trim();
+            const parsed = URLParser.parse(trimmedUrl);
+            
+            if (!parsed.valid) {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            validUrls.push({
+                original: trimmedUrl,
+                domain: parsed.hostname.toLowerCase()
+            });
+        }
+
+        // Sort by domain
+        validUrls.sort((a, b) => a.domain.localeCompare(b.domain));
+
+        return validUrls.map(item => item.original);
+    }
+
+    /**
+     * Sort URLs by length (shortest to longest)
+     * @param {string[]} urls - Array of URL strings
+     * @returns {string[]} Array of URLs sorted by length
+     */
+    sortByLength(urls) {
+        const validUrls = [];
+
+        // Filter valid URLs
+        for (const url of urls) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const trimmedUrl = url.trim();
+            
+            if (URLParser.isValid(trimmedUrl)) {
+                validUrls.push(trimmedUrl);
+            } else {
+                this.stats.invalidCount++;
+            }
+        }
+
+        // Sort by length
+        validUrls.sort((a, b) => a.length - b.length);
+
+        return validUrls;
+    }
+
+    /**
+     * Sort URLs by filename (without extension) alphabetically
+     * @param {string[]} urls - Array of URL strings
+     * @returns {string[]} Array of URLs sorted by filename
+     */
+    sortByFilename(urls) {
+        const validUrls = [];
+
+        // Filter and collect valid URLs with their filenames
+        for (const url of urls) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            const trimmedUrl = url.trim();
+            const parsed = URLParser.parse(trimmedUrl);
+            
+            if (!parsed.valid) {
+                this.stats.invalidCount++;
+                continue;
+            }
+
+            // Extract filename from path
+            const path = parsed.path || '/';
+            const pathSegments = path.split('/');
+            let filename = pathSegments[pathSegments.length - 1] || '';
+            
+            // Remove file extension
+            const lastDotIndex = filename.lastIndexOf('.');
+            if (lastDotIndex > 0) {
+                filename = filename.substring(0, lastDotIndex);
+            }
+            
+            // If no filename, use the last path segment or domain
+            if (!filename) {
+                if (pathSegments.length > 1) {
+                    filename = pathSegments[pathSegments.length - 2] || parsed.hostname;
+                } else {
+                    filename = parsed.hostname;
+                }
+            }
+
+            validUrls.push({
+                original: trimmedUrl,
+                filename: filename.toLowerCase()
+            });
+        }
+
+        // Sort by filename
+        validUrls.sort((a, b) => a.filename.localeCompare(b.filename));
+
+        return validUrls.map(item => item.original);
     }
 
     /**

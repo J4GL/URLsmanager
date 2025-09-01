@@ -36,7 +36,12 @@ class InputValidator {
                     'deduplicateFull',
                     'filterRemove',
                     'filterKeep',
-                    'keepTLD'
+                    'keepTLD',
+                    'trimLastPath',
+                    'extractTLD',
+                    'sortByDomain',
+                    'sortByLength',
+                    'sortByFilename'
                 ]
             }
         };

@@ -34,7 +34,12 @@ class ControlPanel {
      * Bind DOM elements to class properties
      */
     bindElements() {
-        this.operationSelect = document.getElementById('operation-select');
+        // Bind multiple operation select menus
+        this.cleanModifySelect = document.getElementById('clean-modify-select');
+        this.deduplicateSelect = document.getElementById('deduplicate-select');
+        this.filterSelect = document.getElementById('filter-select');
+        this.sortSelect = document.getElementById('sort-select');
+        
         this.filterInputGroup = document.querySelector('.filter-input-group');
         this.filterInput = document.getElementById('filter-input');
         this.processAllCheckbox = document.getElementById('process-all-checkbox');
@@ -44,18 +49,31 @@ class ControlPanel {
         this.buttonText = this.processButton?.querySelector('.btn-text');
         
         // Validate required elements
-        if (!this.operationSelect || !this.processButton) {
+        if (!this.cleanModifySelect || !this.deduplicateSelect || !this.filterSelect || !this.sortSelect || !this.processButton) {
             throw new Error('Required control panel elements not found');
         }
+        
+        // Store all select elements for easier iteration
+        this.allSelects = [this.cleanModifySelect, this.deduplicateSelect, this.filterSelect, this.sortSelect];
     }
     
     /**
      * Attach event listeners to control elements
      */
     attachEventListeners() {
-        // Operation selection change
-        this.operationSelect.addEventListener('change', () => {
-            this.handleOperationChange();
+        // Operation selection change for all select menus
+        this.allSelects.forEach(select => {
+            select.addEventListener('change', (event) => {
+                // If a selection was made, clear the other select menus
+                if (event.target.value) {
+                    this.allSelects.forEach(otherSelect => {
+                        if (otherSelect !== event.target) {
+                            otherSelect.value = '';
+                        }
+                    });
+                }
+                this.handleOperationChange();
+            });
         });
         
         // Process button click
@@ -267,18 +285,44 @@ class ControlPanel {
     }
     
     /**
-     * Get selected operation
+     * Get selected operation from any of the select menus
      */
     getOperation() {
-        return this.operationSelect?.value || '';
+        // Check all select menus and return the one that has a value
+        for (const select of this.allSelects) {
+            if (select.value) {
+                return select.value;
+            }
+        }
+        return '';
     }
     
     /**
      * Set selected operation
      */
     setOperation(operation) {
-        if (this.operationSelect) {
-            this.operationSelect.value = operation;
+        // Clear all selects first
+        this.allSelects.forEach(select => select.value = '');
+        
+        // Find the appropriate select menu for this operation and set it
+        const operationMap = {
+            'removeParams': this.cleanModifySelect,
+            'trimLastPath': this.cleanModifySelect,
+            'extractTLD': this.cleanModifySelect,
+            'keepTLD': this.cleanModifySelect,
+            'deduplicateTLD': this.deduplicateSelect,
+            'deduplicateDomain': this.deduplicateSelect,
+            'deduplicateFull': this.deduplicateSelect,
+            'filterKeep': this.filterSelect,
+            'filterRemove': this.filterSelect,
+            'sortByDomain': this.sortSelect,
+            'sortByLength': this.sortSelect,
+            'sortByFilename': this.sortSelect
+        };
+        
+        const targetSelect = operationMap[operation];
+        if (targetSelect) {
+            targetSelect.value = operation;
             this.handleOperationChange();
         }
     }
@@ -471,25 +515,37 @@ class ControlPanel {
     }
     
     /**
-     * Get available operations list
+     * Get available operations list from all select menus
      */
     getAvailableOperations() {
-        const options = Array.from(this.operationSelect.options);
-        return options
-            .filter(option => option.value)
-            .map(option => ({
-                value: option.value,
-                text: option.textContent
-            }));
+        const allOptions = [];
+        
+        // Collect options from all select menus
+        this.allSelects.forEach(select => {
+            const options = Array.from(select.options);
+            options
+                .filter(option => option.value)
+                .forEach(option => {
+                    allOptions.push({
+                        value: option.value,
+                        text: option.textContent,
+                        category: select.id.replace('-select', '')
+                    });
+                });
+        });
+        
+        return allOptions;
     }
     
     /**
      * Enable/disable the control panel
      */
     setEnabled(enabled) {
-        if (this.operationSelect) {
-            this.operationSelect.disabled = !enabled;
-        }
+        // Enable/disable all select menus
+        this.allSelects.forEach(select => {
+            select.disabled = !enabled;
+        });
+        
         if (this.filterInput) {
             this.filterInput.disabled = !enabled;
         }

@@ -396,6 +396,21 @@ class URLManager {
             case 'keepTLD':
                 return { operation: 'keepTLDOnly' };
                 
+            case 'trimLastPath':
+                return { operation: 'trimLastPath' };
+                
+            case 'extractTLD':
+                return { operation: 'extractTLD' };
+                
+            case 'sortByDomain':
+                return { operation: 'sortByDomain' };
+                
+            case 'sortByLength':
+                return { operation: 'sortByLength' };
+                
+            case 'sortByFilename':
+                return { operation: 'sortByFilename' };
+                
             default:
                 throw new Error(`Unknown operation: ${operation}`);
         }
@@ -911,10 +926,9 @@ class URLManager {
      * Update UI state
      */
     updateUI() {
-        // Update copy button state
-        const copyResultsBtn = document.getElementById('copy-results-btn');
-        if (copyResultsBtn) {
-            copyResultsBtn.disabled = !this.textAreaManager.hasOutputContent();
+        // Copy button state is now managed by ClipboardUtilityManager
+        if (this.clipboardUtilityManager) {
+            this.clipboardUtilityManager.updateCopyButtonState();
         }
         
         // Update control panel state
