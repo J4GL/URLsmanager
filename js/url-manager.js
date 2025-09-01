@@ -256,6 +256,16 @@ class URLManager {
                 this.clipboardUtilityManager.updateCopyButtonState();
             };
             
+            // Also override setOutputLines to update copy button state
+            const originalSetOutputLines = this.textAreaManager.setOutputLines.bind(this.textAreaManager);
+            this.textAreaManager.setOutputLines = (lines) => {
+                originalSetOutputLines(lines);
+                // Update copy button state after setting output lines
+                setTimeout(() => {
+                    this.clipboardUtilityManager.updateCopyButtonState();
+                }, 10);
+            };
+            
             // Initial copy button state update
             this.clipboardUtilityManager.updateCopyButtonState();
         }
