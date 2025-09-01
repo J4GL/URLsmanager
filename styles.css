@@ -96,6 +96,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    height: 100%;
 }
 
 /* Control Panel */
@@ -103,14 +104,12 @@ body {
     width: 220px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     gap: 1.2rem;
     padding: 1.5rem 1rem;
     background: linear-gradient(145deg, #2a2a2a, #252525);
     border-radius: 12px;
     border: 1px solid #444;
     height: fit-content;
-    align-self: center;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -125,6 +124,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    height: 100%;
 }
 
 /* Text Area Container */
@@ -133,12 +133,14 @@ body {
     flex-direction: column;
     gap: 0.5rem;
     flex: 1;
+    min-height: 0;
 }
 
 /* Text Areas */
 .text-area {
     width: 100%;
-    min-height: 500px;
+    flex: 1;
+    min-height: 200px;
     padding: 1rem;
     background-color: #2a2a2a;
     border: 2px solid #444;
